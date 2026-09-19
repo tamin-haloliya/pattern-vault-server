@@ -1,0 +1,39 @@
+# ---------- Secrets & environment ----------
+.env*
+!.env.example
+
+# keys and keystores (JWT signing keys, TLS certs)
+*.pem
+*.key
+*.jks
+*.p12
+
+# local-only Spring config
+application-local.*
+application-secrets.*
+
+# ---------- Gradle / Java ----------
+build/
+.gradle/
+out/
+*.class
+hs_err_pid*
+
+# ---------- IDEs ----------
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+.sts4-cache/
+
+# ---------- OS files ----------
+.DS_Store
+Thumbs.db
+
+# ---------- Logs & temp ----------
+*.log
+logs/
+tmp/
