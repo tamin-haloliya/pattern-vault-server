@@ -8,7 +8,7 @@ services:
     ports:
       - "${AUTH_DB_PORT:-5433}:5432"
     volumes:
-      - auth-db-data:/var/lib/postgresql/data
+      - auth-db-data:/var/lib/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${AUTH_DB_USER} -d ${AUTH_DB_NAME}" ]
       interval: 5s
