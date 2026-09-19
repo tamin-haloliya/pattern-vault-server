@@ -1,0 +1,19 @@
+services:
+  auth-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${AUTH_DB_NAME}
+      POSTGRES_USER: ${AUTH_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:?AUTH_DB_PASSWORD is required}
+    ports:
+      - "${AUTH_DB_PORT:-5433}:5432"
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${AUTH_DB_USER} -d ${AUTH_DB_NAME}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  auth-db-data:
