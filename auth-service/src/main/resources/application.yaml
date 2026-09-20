@@ -17,3 +17,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+eureka:
+  client:
+    service_url:
+      defaultZone: http://${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka
