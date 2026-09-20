@@ -1,4 +1,4 @@
-package com.pattern_vault.auth_service;
+package com.patternvault.authservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
