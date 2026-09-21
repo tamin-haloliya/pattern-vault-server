@@ -1,4 +1,4 @@
-package com.pattern_vault.auth_service;
+package com.patternvault.authservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
