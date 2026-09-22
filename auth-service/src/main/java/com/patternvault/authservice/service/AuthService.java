@@ -6,7 +6,6 @@ import com.patternvault.authservice.entity.User;
 import com.patternvault.authservice.exception.ConflictException;
 import com.patternvault.authservice.repository.RefreshTokenRepository;
 import com.patternvault.authservice.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -15,6 +14,7 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
@@ -64,6 +64,22 @@ public class AuthService {
         String refreshToken = createRefreshToken(user);
 
         return new TokenResponse(accessToken, refreshToken);
+    }
+
+    @Transactional
+    public TokenResponse refresh(RefreshRequest req){
+        RefreshToken token = refreshTokenRepository.findByTokenHash(sha256(req.refreshToken())).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized user"));
+
+        if(token.isRevoked() || token.getExpireAt().isBefore(Instant.now())){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized user");
+        }
+
+        token.setRevoked(true);
+
+        String newAccessToken = createAccessToken(token.getUser());
+        String newRefreshToken = createRefreshToken(token.getUser());
+
+        return new TokenResponse(newAccessToken, newRefreshToken);
     }
 
     private String createAccessToken(User user){
