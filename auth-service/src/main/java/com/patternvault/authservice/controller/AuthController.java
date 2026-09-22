@@ -1,9 +1,6 @@
 package com.patternvault.authservice.controller;
 
-import com.patternvault.authservice.dto.LoginRequest;
-import com.patternvault.authservice.dto.LoginResponse;
-import com.patternvault.authservice.dto.RegisterRequest;
-import com.patternvault.authservice.dto.RegisterResponse;
+import com.patternvault.authservice.dto.*;
 import com.patternvault.authservice.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -25,7 +22,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
+    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest req) {
         return ResponseEntity.status(HttpStatus.OK).body(authService.login(req));
     }
 }
