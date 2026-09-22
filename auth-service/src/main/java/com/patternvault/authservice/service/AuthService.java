@@ -1,11 +1,10 @@
 package com.patternvault.authservice.service;
 
-import com.patternvault.authservice.dto.LoginRequest;
-import com.patternvault.authservice.dto.LoginResponse;
-import com.patternvault.authservice.dto.RegisterRequest;
-import com.patternvault.authservice.dto.RegisterResponse;
+import com.patternvault.authservice.dto.*;
+import com.patternvault.authservice.entity.RefreshToken;
 import com.patternvault.authservice.entity.User;
 import com.patternvault.authservice.exception.ConflictException;
+import com.patternvault.authservice.repository.RefreshTokenRepository;
 import com.patternvault.authservice.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
@@ -21,16 +20,21 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import static com.patternvault.authservice.util.TokenUtil.generateRawToken;
+import static com.patternvault.authservice.util.TokenUtil.sha256;
+
 @Service
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtEncoder jwtEncoder;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtEncoder jwtEncoder) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtEncoder jwtEncoder, RefreshTokenRepository refreshTokenRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtEncoder = jwtEncoder;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Transactional
@@ -49,14 +53,17 @@ public class AuthService {
         return new RegisterResponse(saved.getId(), saved.getUsername(), saved.getEmail(), saved.getCreatedAt());
     }
 
-    public LoginResponse login(LoginRequest req){
+    public TokenResponse login(LoginRequest req){
         User user = userRepository.findByEmail(req.email()).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials."));
 
         if(!passwordEncoder.matches(req.password(), user.getPasswordHashed())){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials.");
         }
 
-        return new LoginResponse(createAccessToken(user));
+        String accessToken = createAccessToken(user);
+        String refreshToken = createRefreshToken(user);
+
+        return new TokenResponse(accessToken, refreshToken);
     }
 
     private String createAccessToken(User user){
@@ -71,6 +78,15 @@ public class AuthService {
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(header, claimsSet)).getTokenValue();
+    }
 
+    private String createRefreshToken(User user){
+        String rawToken = generateRawToken();
+        String tokenHash = sha256(rawToken);
+
+        RefreshToken token = new RefreshToken(user, tokenHash, Instant.now().plus(7, ChronoUnit.DAYS));
+        refreshTokenRepository.save(token);
+
+        return rawToken;
     }
 }
