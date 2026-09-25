@@ -30,4 +30,10 @@ public class AuthController {
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody RefreshRequest req) {
         return ResponseEntity.status(HttpStatus.OK).body(authService.refresh(req));
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequest req){
+        this.authService.logout(req);
+        return ResponseEntity.noContent().build();
+    }
 }
