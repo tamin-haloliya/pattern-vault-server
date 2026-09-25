@@ -82,6 +82,18 @@ public class AuthService {
         return new TokenResponse(newAccessToken, newRefreshToken);
     }
 
+    public void logout(LogoutRequest req){
+        RefreshToken token = refreshTokenRepository.findByTokenHash(sha256(req.refreshToken())).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized user"));
+
+        if(token.isRevoked() || token.getExpireAt().isBefore(Instant.now())){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized user");
+        }
+
+        token.setRevoked(true);
+
+        refreshTokenRepository.save(token);
+    }
+
     private String createAccessToken(User user){
         Instant now = Instant.now();
 
