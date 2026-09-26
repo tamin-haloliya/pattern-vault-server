@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 import static com.patternvault.authservice.util.TokenUtil.generateRawToken;
 import static com.patternvault.authservice.util.TokenUtil.sha256;
@@ -92,6 +93,11 @@ public class AuthService {
         token.setRevoked(true);
 
         refreshTokenRepository.save(token);
+    }
+
+    @Transactional
+    public void logoutAll(UUID id){
+        refreshTokenRepository.revokeAllRefreshTokens(id);
     }
 
     private String createAccessToken(User user){
