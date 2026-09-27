@@ -27,18 +27,16 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private static final String[] PUBLIC = {
-            "/api/auth/register", "/api/auth/login", "/api/auth/refresh",
-            "/actuator/health", "/error"          // <-- "/error" is the new one
-    };
-
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
-                .authorizeHttpRequests(a -> a.requestMatchers(PUBLIC).permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(a -> a
+                        .requestMatchers("/api/auth/logout-all").authenticated()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .anyRequest().authenticated())
                 .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
                 .build();
     }

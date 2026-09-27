@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 import static com.patternvault.authservice.util.TokenUtil.generateRawToken;
 import static com.patternvault.authservice.util.TokenUtil.sha256;
@@ -80,6 +81,23 @@ public class AuthService {
         String newRefreshToken = createRefreshToken(token.getUser());
 
         return new TokenResponse(newAccessToken, newRefreshToken);
+    }
+
+    public void logout(LogoutRequest req){
+        RefreshToken token = refreshTokenRepository.findByTokenHash(sha256(req.refreshToken())).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized user"));
+
+        if(token.isRevoked() || token.getExpireAt().isBefore(Instant.now())){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized user");
+        }
+
+        token.setRevoked(true);
+
+        refreshTokenRepository.save(token);
+    }
+
+    @Transactional
+    public void logoutAll(UUID id){
+        refreshTokenRepository.revokeAllRefreshTokens(id);
     }
 
     private String createAccessToken(User user){

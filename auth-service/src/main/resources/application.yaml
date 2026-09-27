@@ -3,7 +3,9 @@ spring:
     name: auth-service
 
   config:
-    import: optional:file:../config/.env[.properties]
+    import:
+      - optional:file:../config/.env.common[.properties]
+      - optional:file:../config/.env.authservice[.properties]
 
   datasource:
     url: jdbc:postgresql://${AUTH_DB_HOST:localhost}:${AUTH_DB_PORT:5432}/${AUTH_DB_NAME:auth_db}
@@ -25,4 +27,7 @@ spring:
 eureka:
   client:
     service_url:
-      defaultZone: http://${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka
+      defaultZone: ${EUREKA_URI}
+
+jwt:
+  secret: ${JWT_SECRET}
