@@ -1,6 +1,8 @@
 package com.patternvault.authservice.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.patternvault.authservice.filter.RateLimitFilter;
+import com.patternvault.authservice.service.RateLimitService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +19,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
@@ -28,7 +31,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http, RateLimitService rateLimitService) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -38,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
+                .addFilterAfter(new RateLimitFilter(rateLimitService), BearerTokenAuthenticationFilter.class)
                 .build();
     }
 
@@ -53,7 +57,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtDecoder jwtDecoder(@Value("${jwt.secret}") String secret){
+    JwtDecoder jwtDecoder(@Value("${JWT_SECRET}") String secret){
         SecretKey key = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
         return NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
     }

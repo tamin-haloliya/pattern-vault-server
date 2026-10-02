@@ -25,9 +25,19 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
+	// oauth2-resource-server
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+	// Flyway for postgresql
 	implementation("org.flywaydb:flyway-database-postgresql")
+	//	Eureka client
 	implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
+	// Bucket4j core
+	implementation("com.bucket4j:bucket4j_jdk17-core:8.20.0")
+	// Redis integration for Bucket4j
+	implementation("com.bucket4j:bucket4j_jdk17-redis-common:8.20.0")
+	implementation("com.bucket4j:bucket4j_jdk17-lettuce:8.20.0")
+	// Lettuce client
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")
