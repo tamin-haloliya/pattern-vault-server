@@ -28,14 +28,14 @@ import static com.patternvault.authservice.util.TokenUtil.sha256;
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtEncoder jwtEncoder;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final TokenService tokenService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtEncoder jwtEncoder, RefreshTokenRepository refreshTokenRepository) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, RefreshTokenRepository refreshTokenRepository, TokenService tokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtEncoder = jwtEncoder;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.tokenService = tokenService;
     }
 
     @Transactional
@@ -61,8 +61,8 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials.");
         }
 
-        String accessToken = createAccessToken(user);
-        String refreshToken = createRefreshToken(user);
+        String accessToken = this.tokenService.createAccessToken(user);
+        String refreshToken = this.tokenService.createRefreshToken(user);
 
         return new TokenResponse(accessToken, refreshToken);
     }
@@ -77,8 +77,8 @@ public class AuthService {
 
         token.setRevoked(true);
 
-        String newAccessToken = createAccessToken(token.getUser());
-        String newRefreshToken = createRefreshToken(token.getUser());
+        String newAccessToken = this.tokenService.createAccessToken(token.getUser());
+        String newRefreshToken = this.tokenService.createRefreshToken(token.getUser());
 
         return new TokenResponse(newAccessToken, newRefreshToken);
     }
@@ -98,29 +98,5 @@ public class AuthService {
     @Transactional
     public void logoutAll(UUID id){
         refreshTokenRepository.revokeAllRefreshTokens(id);
-    }
-
-    private String createAccessToken(User user){
-        Instant now = Instant.now();
-
-        JwtClaimsSet claimsSet = JwtClaimsSet.builder()
-                .subject(user.getId().toString())
-                .issuedAt(now)
-                .expiresAt(now.plus(15, ChronoUnit.MINUTES))
-                .build();
-
-        JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
-
-        return jwtEncoder.encode(JwtEncoderParameters.from(header, claimsSet)).getTokenValue();
-    }
-
-    private String createRefreshToken(User user){
-        String rawToken = generateRawToken();
-        String tokenHash = sha256(rawToken);
-
-        RefreshToken token = new RefreshToken(user, tokenHash, Instant.now().plus(7, ChronoUnit.DAYS));
-        refreshTokenRepository.save(token);
-
-        return rawToken;
     }
 }
