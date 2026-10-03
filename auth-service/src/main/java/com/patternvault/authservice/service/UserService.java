@@ -1,7 +1,6 @@
 package com.patternvault.authservice.service;
 
 import com.patternvault.authservice.dto.UserResponse;
-import com.patternvault.authservice.entity.User;
 import com.patternvault.authservice.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
